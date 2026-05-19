@@ -47,21 +47,6 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
-
-            <div class="form-group full">
-                <label for="alamat">Alamat Pengiriman</label>
-                <input
-                    type="text"
-                    id="alamat"
-                    name="alamat"
-                    class="form-control {{ $errors->has('alamat') ? 'is-invalid' : '' }}"
-                    value="{{ old('alamat', $order->alamat) }}"
-                    placeholder="Masukkan alamat lengkap pengiriman"
-                >
-                @error('alamat')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
         </div>
 
         <div class="section-divider">Detail Order</div>
@@ -69,14 +54,14 @@
             <div class="form-group">
                 <label for="produk">Produk <span style="color:#e24b4a;">*</span></label>
                 <select id="produk" name="produk"
-                        class="form-control {{ $errors->has('produk') ? 'is-invalid' : '' }}" required>
+                        class="form-control {{ $errors->has('produk') ? 'is-invalid' : '' }}"
+                        required onchange="hitungTotal()">
                     <option value="">Pilih produk...</option>
-                    @foreach([
-                        'Expro Water',
-                    ] as $item)
-                        <option value="{{ $item }}"
-                            {{ old('produk', $order->produk) == $item ? 'selected' : '' }}>
-                            {{ $item }}
+                    @foreach($produkList as $nama => $harga)
+                        <option value="{{ $nama }}"
+                            data-harga="{{ $harga }}"
+                            {{ old('produk', $order->produk) == $nama ? 'selected' : '' }}>
+                            {{ $nama }} — Rp {{ number_format($harga, 0, ',', '.') }}/unit
                         </option>
                     @endforeach
                 </select>
@@ -95,6 +80,7 @@
                     value="{{ old('jumlah', $order->jumlah) }}"
                     min="1"
                     required
+                    oninput="hitungTotal()"
                 >
                 @error('jumlah')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -110,7 +96,11 @@
                     class="form-control {{ $errors->has('total_harga') ? 'is-invalid' : '' }}"
                     value="{{ old('total_harga', $order->total_harga) }}"
                     min="0"
+                    readonly
+                    style="background:#f0f4f8;cursor:default;"
+                    placeholder="Otomatis terisi setelah pilih produk"
                 >
+                <span id="rincian-harga" class="form-hint" style="display:none;"></span>
                 @error('total_harga')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -169,3 +159,36 @@
     </form>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function hitungTotal() {
+    var produkEl  = document.getElementById('produk');
+    var jumlahEl  = document.getElementById('jumlah');
+    var totalEl   = document.getElementById('total_harga');
+    var rincianEl = document.getElementById('rincian-harga');
+
+    var selectedOption = produkEl.options[produkEl.selectedIndex];
+    var harga  = parseInt(selectedOption.getAttribute('data-harga')) || 0;
+    var jumlah = parseInt(jumlahEl.value) || 0;
+
+    if (harga > 0 && jumlah > 0) {
+        var total = harga * jumlah;
+        totalEl.value = total;
+
+        var fmt = function(n) {
+            return 'Rp ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        };
+        rincianEl.textContent = fmt(harga) + ' \u00d7 ' + jumlah + ' unit = ' + fmt(total);
+        rincianEl.style.display = 'block';
+    } else {
+        totalEl.value = '';
+        rincianEl.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    hitungTotal();
+});
+</script>
+@endpush

@@ -302,28 +302,29 @@
 <body>
 
 <nav class="navbar">
-    <a href="{{ url('/') }}" class="nav-brand">
+    <a href="{{ auth()->check() ? route('orders.index') : route('login') }}" class="nav-brand">
         <div class="drop"><span></span></div>
         EXPROWATER
     </a>
 
+    @auth
     <div class="nav-links">
-        <a href="{{ url('/') }}" class="{{ request()->is('/') ? 'active' : '' }}">Beranda</a>
         <a href="{{ route('orders.index') }}" class="{{ request()->routeIs('orders.*') ? 'active' : '' }}">Orders</a>
     </div>
 
-    @auth
     <div class="nav-user">
         <div class="avatar">{{ strtoupper(substr(auth()->user()->name ?? 'AD', 0, 2)) }}</div>
-        {{ auth()->user()->name ?? 'Admin' }}
-        <form method="POST" action="{{ route('logout') }}" style="display:inline;margin-left:8px;">
+        <span>{{ auth()->user()->name ?? 'Admin' }}</span>
+        {{-- ✅ fix: use POST method for logout --}}
+        <form method="POST" action="{{ route('logout') }}" style="display:inline;margin-left:4px;">
             @csrf
-            <button class="btn btn-sm" style="background:transparent;color:#fff;border:none;padding:6px 10px;">Logout</button>
+            <button type="submit" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2);">Logout</button>
         </form>
     </div>
     @else
+    <div class="nav-links"></div>
     <div class="nav-user">
-        <a href="{{ route('login') }}" class="btn" style="padding:6px 12px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.08);">Login</a>
+        <a href="{{ route('login') }}" class="btn" style="padding:6px 12px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.25);">Login</a>
     </div>
     @endauth
 </nav>

@@ -47,15 +47,23 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
+        </div>
 
         <div class="section-divider">Detail Order</div>
         <div class="form-grid">
             <div class="form-group">
                 <label for="produk">Produk <span style="color:#e24b4a;">*</span></label>
                 <select id="produk" name="produk"
-                        class="form-control {{ $errors->has('produk') ? 'is-invalid' : '' }}" required>
+                        class="form-control {{ $errors->has('produk') ? 'is-invalid' : '' }}"
+                        required onchange="hitungTotal()">
                     <option value="">Pilih produk...</option>
-                    <option value="Expro Water"      {{ old('produk') == 'Expro Water'      ? 'selected' : '' }}>Expro Water</option>
+                    @foreach($produkList as $nama => $harga)
+                        <option value="{{ $nama }}"
+                            data-harga="{{ $harga }}"
+                            {{ old('produk') == $nama ? 'selected' : '' }}>
+                            {{ $nama }} — Rp {{ number_format($harga, 0, ',', '.') }}/unit
+                        </option>
+                    @endforeach
                 </select>
                 @error('produk')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -72,6 +80,7 @@
                     value="{{ old('jumlah', 1) }}"
                     min="1"
                     required
+                    oninput="hitungTotal()"
                 >
                 @error('jumlah')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -86,9 +95,12 @@
                     name="total_harga"
                     class="form-control {{ $errors->has('total_harga') ? 'is-invalid' : '' }}"
                     value="{{ old('total_harga') }}"
-                    placeholder="0"
-                    min="15000"
+                    min="0"
+                    readonly
+                    style="background:#f0f4f8;cursor:default;"
+                    placeholder="Otomatis terisi setelah pilih produk"
                 >
+                <span id="rincian-harga" class="form-hint" style="display:none;"></span>
                 @error('total_harga')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -146,3 +158,36 @@
     </form>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function hitungTotal() {
+    var produkEl  = document.getElementById('produk');
+    var jumlahEl  = document.getElementById('jumlah');
+    var totalEl   = document.getElementById('total_harga');
+    var rincianEl = document.getElementById('rincian-harga');
+
+    var selectedOption = produkEl.options[produkEl.selectedIndex];
+    var harga  = parseInt(selectedOption.getAttribute('data-harga')) || 0;
+    var jumlah = parseInt(jumlahEl.value) || 0;
+
+    if (harga > 0 && jumlah > 0) {
+        var total = harga * jumlah;
+        totalEl.value = total;
+
+        var fmt = function(n) {
+            return 'Rp ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        };
+        rincianEl.textContent = fmt(harga) + ' \u00d7 ' + jumlah + ' unit = ' + fmt(total);
+        rincianEl.style.display = 'block';
+    } else {
+        totalEl.value = '';
+        rincianEl.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    hitungTotal();
+});
+</script>
+@endpush

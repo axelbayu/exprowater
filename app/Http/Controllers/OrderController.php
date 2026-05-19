@@ -3,36 +3,69 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use App\Models\History;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    // 🔹 Tampilkan semua data dengan PAGINASI
-    public function index()
+    /**
+     * Daftar produk beserta harga satuan (Rp).
+     * Tambah produk baru cukup di sini — otomatis muncul di form.
+     */
+    private array $produkList = [
+        'Expro Water' => 10000,
+    ];
+
+    /**
+     * Tampilkan semua order dengan filter & paginasi.
+     */
+    public function index(Request $request)
     {
-        // Gunakan paginate() agar method hasPages() atau paginasi manual berfungsi
-        $orders = Order::latest()->paginate(10); 
+        $query = Order::latest();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_pelanggan', 'like', "%{$search}%")
+                  ->orWhere('produk', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $orders = $query->paginate(10)->withQueryString();
+
         return view('orders.index', compact('orders'));
     }
 
+    /**
+     * Form tambah order.
+     */
     public function create()
     {
-        return view('orders.create');
+        $produkList = $this->produkList;
+        return view('orders.create', compact('produkList'));
     }
 
+    /**
+     * Simpan order baru.
+     * Total harga dihitung ulang di server agar tidak bisa dimanipulasi.
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
             'nama_pelanggan' => 'required|string|max:255',
             'telepon'        => 'nullable|string|max:50',
-            'produk'         => 'required|string|max:255',
+            'produk'         => 'required|string|in:' . implode(',', array_keys($this->produkList)),
             'jumlah'         => 'required|integer|min:1',
-            'total_harga'    => 'nullable|numeric|min:15000',
             'status'         => 'required|in:pending,diproses,selesai,dibatalkan',
             'tanggal_order'  => 'required|date',
             'catatan'        => 'nullable|string|max:1000',
         ]);
+
+        // Hitung total harga di server (tidak percaya input dari client)
+        $data['total_harga'] = $this->produkList[$data['produk']] * $data['jumlah'];
 
         Order::create($data);
 
@@ -40,23 +73,33 @@ class OrderController extends Controller
             ->with('success', 'Order berhasil dibuat.');
     }
 
+    /**
+     * Form edit order.
+     */
     public function edit(Order $order)
     {
-        return view('orders.edit', compact('order'));
+        $produkList = $this->produkList;
+        return view('orders.edit', compact('order', 'produkList'));
     }
 
+    /**
+     * Update order.
+     * Total harga dihitung ulang di server.
+     */
     public function update(Request $request, Order $order)
     {
         $data = $request->validate([
             'nama_pelanggan' => 'required|string|max:255',
             'telepon'        => 'nullable|string|max:50',
-            'produk'         => 'required|string|max:255',
+            'produk'         => 'required|string|in:' . implode(',', array_keys($this->produkList)),
             'jumlah'         => 'required|integer|min:1',
-            'total_harga'    => 'nullable|numeric|min:15000',
             'status'         => 'required|in:pending,diproses,selesai,dibatalkan',
             'tanggal_order'  => 'required|date',
             'catatan'        => 'nullable|string|max:1000',
         ]);
+
+        // Hitung total harga di server
+        $data['total_harga'] = $this->produkList[$data['produk']] * $data['jumlah'];
 
         $order->update($data);
 
@@ -64,31 +107,14 @@ class OrderController extends Controller
             ->with('success', 'Order berhasil diperbarui.');
     }
 
+    /**
+     * Hapus order.
+     */
     public function destroy(Order $order)
     {
         $order->delete();
+
         return redirect()->route('orders.index')
             ->with('success', 'Order berhasil dihapus.');
-    }
-
-    public function selesai($id)
-    {
-        $order = Order::findOrFail($id);
-
-        History::create([
-            'nama_pelanggan' => $order->nama_pelanggan,
-            'telepon'        => $order->telepon,
-            'produk'         => $order->produk,
-            'jumlah'         => $order->jumlah,
-            'total_harga'    => $order->total_harga,
-            'status'         => $order->status,
-            'tanggal_order'  => $order->tanggal_order,
-            'catatan'        => $order->catatan,
-        ]);
-
-        $order->delete();
-
-        return redirect()->route('orders.index')
-            ->with('success', 'Pesanan selesai & masuk history');
     }
 }
