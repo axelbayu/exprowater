@@ -9,8 +9,9 @@ class AuthController extends Controller
 {
     public function showLoginForm()
     {
+        // Jika sudah login, langsung ke dashboard
         if (auth()->check()) {
-            return redirect()->route('orders.index');
+            return redirect()->route('dashboard');
         }
 
         return view('auth.login');
@@ -25,7 +26,9 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
-            return redirect()->intended(route('orders.index'));
+
+            // Selalu ke dashboard setelah login berhasil
+            return redirect()->route('dashboard');
         }
 
         return back()->withErrors([
@@ -39,6 +42,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        // Setelah logout kembali ke halaman login
         return redirect()->route('login')->with('success', 'Berhasil logout.');
     }
 }

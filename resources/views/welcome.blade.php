@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Exprowater')</title>
+    <title>Exprowater – Sistem Manajemen Order</title>
 
     {{-- Bootstrap --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -68,6 +68,20 @@
             font-weight:600;
         }
 
+        .nav-link-custom{
+            color:rgba(255,255,255,.75);
+            text-decoration:none;
+            padding:6px 16px;
+            border-radius:8px;
+            font-size:14px;
+            transition:.2s;
+        }
+
+        .nav-link-custom:hover{
+            background:rgba(255,255,255,.1);
+            color:white;
+        }
+
         .logout-btn{
             border:1px solid rgba(255,255,255,.4);
             color:white;
@@ -75,6 +89,10 @@
             border-radius:8px;
             text-decoration:none;
             font-size:13px;
+            background:transparent;
+            cursor:pointer;
+            font-family:'Poppins',sans-serif;
+            transition:.2s;
         }
 
         .logout-btn:hover{
@@ -166,6 +184,7 @@
             border-radius:10px;
             min-width:240px;
             outline:none;
+            font-family:'Poppins',sans-serif;
         }
 
         .login-form button{
@@ -176,10 +195,45 @@
             border-radius:10px;
             font-weight:600;
             transition:.2s;
+            font-family:'Poppins',sans-serif;
+            cursor:pointer;
         }
 
         .login-form button:hover{
             background:#dff6ff;
+        }
+
+        /* ===== ALREADY LOGGED IN BUTTON ===== */
+        .hero-cta-btn{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            background:white;
+            color:#003f6b;
+            border:none;
+            padding:14px 28px;
+            border-radius:10px;
+            font-weight:600;
+            font-size:15px;
+            text-decoration:none;
+            margin-bottom:35px;
+            transition:.2s;
+        }
+
+        .hero-cta-btn:hover{
+            background:#dff6ff;
+            color:#003f6b;
+        }
+
+        /* ===== ERROR ALERT ===== */
+        .login-error{
+            background:rgba(255,80,80,.15);
+            border:1px solid rgba(255,100,100,.4);
+            color:#ffd0d0;
+            padding:10px 16px;
+            border-radius:8px;
+            font-size:13px;
+            margin-bottom:16px;
         }
 
         /* ===== STATS ===== */
@@ -266,17 +320,9 @@
             margin-bottom:16px;
         }
 
-        .blue{
-            background:#e5f3ff;
-        }
-
-        .green{
-            background:#e7f8f1;
-        }
-
-        .orange{
-            background:#fff2df;
-        }
+        .blue{ background:#e5f3ff; }
+        .green{ background:#e7f8f1; }
+        .orange{ background:#fff2df; }
 
         .feature-card h3{
             font-size:18px;
@@ -292,51 +338,20 @@
 
         /* ===== RESPONSIVE ===== */
         @media(max-width:992px){
-
-            .stats-grid{
-                grid-template-columns:repeat(2,1fr);
-            }
-
-            .feature-grid{
-                grid-template-columns:1fr;
-            }
-
-            .hero h1{
-                font-size:42px;
-            }
+            .stats-grid{ grid-template-columns:repeat(2,1fr); }
+            .feature-grid{ grid-template-columns:1fr; }
+            .hero h1{ font-size:42px; }
         }
 
         @media(max-width:768px){
-
-            .hero{
-                padding:35px 25px;
-            }
-
-            .stats-grid{
-                grid-template-columns:1fr;
-            }
-
-            .hero-stats{
-                flex-direction:column;
-                gap:20px;
-            }
-
-            .login-form{
-                flex-direction:column;
-            }
-
-            .login-form input,
-            .login-form button{
-                width:100%;
-            }
-
-            .hero h1{
-                font-size:34px;
-            }
+            .hero{ padding:35px 25px; }
+            .stats-grid{ grid-template-columns:1fr; }
+            .hero-stats{ flex-direction:column; gap:20px; }
+            .login-form{ flex-direction:column; }
+            .login-form input, .login-form button{ width:100%; }
+            .hero h1{ font-size:34px; }
         }
     </style>
-
-    @stack('styles')
 </head>
 
 <body>
@@ -344,28 +359,33 @@
     {{-- NAVBAR --}}
     <nav class="navbar-custom d-flex justify-content-between align-items-center">
 
-        <a href="#" class="brand-logo">
+        <a href="{{ route('dashboard') }}" class="brand-logo">
             <div class="brand-circle">O</div>
             EXPROWATER
         </a>
 
         <div class="user-box">
 
-            <div class="user-avatar">
-                AX
-            </div>
+            @auth
+                {{-- Nav links --}}
+                <a href="{{ route('dashboard') }}" class="nav-link-custom">Beranda</a>
+                <a href="{{ route('orders.index') }}" class="nav-link-custom">Orders</a>
 
-            <span class="text-white">
-                Axel Bayu
-            </span>
+                <div class="user-avatar">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                </div>
 
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
+                <span class="text-white" style="font-size:14px;">
+                    {{ auth()->user()->name }}
+                </span>
 
-                <button type="submit" class="logout-btn">
-                    Logout
-                </button>
-            </form>
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="nav-link-custom">Login</a>
+            @endauth
 
         </div>
 
@@ -389,32 +409,46 @@
                 </h1>
 
                 <p>
-                    Platform manajemen pesanan dan distribusi produk pengolahan air Exprowater 
+                    Platform manajemen pesanan dan distribusi produk pengolahan air Exprowater
                     secara efisien, modern, dan terorganisir.
                 </p>
 
-                {{-- LOGIN --}}
-                <form action="{{ route('auth.login') }}" method="POST" class="login-form">
-                    @csrf
+                @auth
+                    {{-- Sudah login: tampilkan tombol masuk ke dashboard --}}
+                    <a href="{{ route('orders.index') }}" class="hero-cta-btn">
+                        📋 Lihat Semua Orders →
+                    </a>
+                @else
+                    {{-- Belum login: tampilkan form login --}}
+                    @if($errors->any())
+                        <div class="login-error">
+                            {{ $errors->first('email') }}
+                        </div>
+                    @endif
 
-                    <input 
-                        type="email"
-                        name="email"
-                        placeholder="Masukkan Email"
-                        required
-                    >
+                    <form action="{{ route('login.post') }}" method="POST" class="login-form">
+                        @csrf
 
-                    <input 
-                        type="password"
-                        name="password"
-                        placeholder="Masukkan Password"
-                        required
-                    >
+                        <input
+                            type="email"
+                            name="email"
+                            value="{{ old('email') }}"
+                            placeholder="Masukkan Email"
+                            required
+                        >
 
-                    <button type="submit">
-                        Login
-                    </button>
-                </form>
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Masukkan Password"
+                            required
+                        >
+
+                        <button type="submit">
+                            Login
+                        </button>
+                    </form>
+                @endauth
 
                 {{-- HERO STATS --}}
                 <div class="hero-stats">
@@ -475,51 +509,35 @@
         <div class="feature-grid">
 
             <div class="feature-card">
-
-                <div class="feature-icon blue">
-                    💧
-                </div>
-
+                <div class="feature-icon blue">💧</div>
                 <h3>Manajemen Order</h3>
-
                 <p>
                     Kelola pesanan produk air dari pelanggan dengan cepat,
                     rapi, dan efisien dalam satu platform modern.
                 </p>
-
             </div>
 
             <div class="feature-card">
-
-                <div class="feature-icon green">
-                    📊
-                </div>
-
+                <div class="feature-icon green">📊</div>
                 <h3>Laporan Real-time</h3>
-
                 <p>
                     Pantau status pengiriman dan penjualan secara langsung
                     dengan data yang selalu update.
                 </p>
-
             </div>
 
             <div class="feature-card">
-
-                <div class="feature-icon orange">
-                    🔧
-                </div>
-
+                <div class="feature-icon orange">🔧</div>
                 <h3>Manajemen Produk</h3>
-
                 <p>
                     Atur katalog produk filtrasi dan pengolahan air dengan
                     sistem yang terstruktur dan mudah digunakan.
                 </p>
-
             </div>
 
         </div>
+
+        <div style="height:2rem;"></div>
 
     </div>
 
