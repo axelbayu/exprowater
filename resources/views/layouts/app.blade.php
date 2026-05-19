@@ -20,9 +20,9 @@
             --border:   #cddce8;
             --text:     #1a2e42;
             --muted:    #6a8fa8;
-            --success-bg: #e0f5f0; --success-txt: #0d6e4a;
-            --warn-bg:  #faeeda;   --warn-txt:    #8a5a00;
-            --danger-bg:#fde8e8;   --danger-txt:  #9a2222;
+            --success-bg:  #e0f5f0; --success-txt: #0d6e4a;
+            --warn-bg:     #faeeda; --warn-txt:    #8a5a00;
+            --danger-bg:   #fde8e8; --danger-txt:  #9a2222;
         }
 
         body {
