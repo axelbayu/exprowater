@@ -55,13 +55,13 @@
                 <label for="produk">Produk <span style="color:#e24b4a;">*</span></label>
                 <select id="produk" name="produk"
                         class="form-control {{ $errors->has('produk') ? 'is-invalid' : '' }}"
-                        required onchange="hitungTotal()">
+                        required>
                     <option value="">Pilih produk...</option>
                     @foreach($produkList as $nama => $harga)
                         <option value="{{ $nama }}"
-                            data-harga="{{ $harga }}"
-                            {{ old('produk') == $nama ? 'selected' : '' }}>
-                            {{ $nama }} — Rp {{ number_format($harga, 0, ',', '.') }}/unit
+                                data-harga="{{ $harga }}"
+                                {{ old('produk') == $nama ? 'selected' : '' }}>
+                            {{ $nama }}
                         </option>
                     @endforeach
                 </select>
@@ -80,7 +80,6 @@
                     value="{{ old('jumlah', 1) }}"
                     min="1"
                     required
-                    oninput="hitungTotal()"
                 >
                 @error('jumlah')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -95,12 +94,9 @@
                     name="total_harga"
                     class="form-control {{ $errors->has('total_harga') ? 'is-invalid' : '' }}"
                     value="{{ old('total_harga') }}"
+                    placeholder="0"
                     min="0"
-                    readonly
-                    style="background:#f0f4f8;cursor:default;"
-                    placeholder="Otomatis terisi setelah pilih produk"
                 >
-                <span id="rincian-harga" class="form-hint" style="display:none;"></span>
                 @error('total_harga')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -161,33 +157,22 @@
 
 @push('scripts')
 <script>
-function hitungTotal() {
-    var produkEl  = document.getElementById('produk');
-    var jumlahEl  = document.getElementById('jumlah');
-    var totalEl   = document.getElementById('total_harga');
-    var rincianEl = document.getElementById('rincian-harga');
-
-    var selectedOption = produkEl.options[produkEl.selectedIndex];
-    var harga  = parseInt(selectedOption.getAttribute('data-harga')) || 0;
-    var jumlah = parseInt(jumlahEl.value) || 0;
-
-    if (harga > 0 && jumlah > 0) {
-        var total = harga * jumlah;
-        totalEl.value = total;
-
-        var fmt = function(n) {
-            return 'Rp ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        };
-        rincianEl.textContent = fmt(harga) + ' \u00d7 ' + jumlah + ' unit = ' + fmt(total);
-        rincianEl.style.display = 'block';
-    } else {
-        totalEl.value = '';
-        rincianEl.style.display = 'none';
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function () {
-    hitungTotal();
+    const produk = document.getElementById('produk');
+    const jumlah = document.getElementById('jumlah');
+    const total = document.getElementById('total_harga');
+
+    function calc() {
+        const opt = produk.selectedOptions[0];
+        const harga = parseFloat(opt?.dataset?.harga || 0) || 0;
+        const qty = parseInt(jumlah.value || 0, 10) || 0;
+        total.value = Math.round(harga * qty);
+    }
+
+    produk.addEventListener('change', calc);
+    jumlah.addEventListener('input', calc);
+    // Inisialisasi saat load
+    calc();
 });
 </script>
 @endpush

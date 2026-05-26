@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Order;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -19,5 +20,8 @@ class DatabaseSeeder extends Seeder
             'email'    => 'axelbayu@gmail.com',
             'password' => Hash::make('password'),
         ]);
+
+        // Sample orders untuk dashboard
+        Order::factory(15)->create();
     }
 }

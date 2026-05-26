@@ -4,12 +4,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
-// Root → login
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Guest only
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -17,7 +15,6 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Auth only
 Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', function () {
@@ -39,5 +36,8 @@ Route::middleware('auth')->group(function () {
         ));
     })->name('dashboard');
 
+    Route::get('orders/pdf', [OrderController::class, 'exportPdf'])->name('orders.pdf');
+    Route::get('orders/pdf/save', [OrderController::class, 'savePdf'])->name('orders.pdf.save');
+    Route::get('orders/{order}/pdf/save', [OrderController::class, 'saveOrderPdf'])->name('orders.pdf.save.single');
     Route::resource('orders', OrderController::class)->except(['show']);
 });
